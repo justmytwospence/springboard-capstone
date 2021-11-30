@@ -1,0 +1,1 @@
+![ERD](images/QuickDBD-Bitcoin%20ETL.svg)
