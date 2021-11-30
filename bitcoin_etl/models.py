@@ -13,11 +13,11 @@ class Block(Base):
     __tablename__ = "Block"
 
     # fields
+    number = Column(BigInteger, primary_key=True)
     hash = Column(String)
     size = Column(BigInteger)
     stripped_size = Column(BigInteger)
     weight = Column(BigInteger)
-    number = Column(BigInteger, primary_key=True)
     version = Column(BigInteger)
     merkle_root = Column(String)
     timestamp = Column(BigInteger)
@@ -27,26 +27,15 @@ class Block(Base):
     transaction_count = Column(BigInteger)
 
     # relationships
-    transactions = relationship('Transaction')
+    transactions = relationship("Transaction", back_populates="block")
 
-
-class Address(Base):
-    __tablename__ = "Address"
-
-    # fields
-    hash = Column(String)
-
-    # relationships
-    transactions = relationship("Transaction",
-                                secondary="TransactionIO",
-                                back_populates="transactions")
 
 class Transaction(Base):
     __tablename__ = "Transaction"
 
     # fields
     hash = Column(String, primary_key=True)
-    block_number = Column(BigInteger, ForeignKey('Block.number'))
+    block_number = Column(BigInteger, ForeignKey("Block.number"))
     size = Column(BigInteger)
     virtual_size = Column(BigInteger)
     version = Column(BigInteger)
@@ -55,8 +44,6 @@ class Transaction(Base):
     block_timestamp = Column(BigInteger)
     is_coinbase = Column(Boolean)
     index = Column(BigInteger)
-    # inputs = Column([]transaction_input)
-    # outputs = Column([]transaction_output)
     input_count = Column(BigInteger)
     output_count = Column(BigInteger)
     input_value = Column(BigInteger)
@@ -64,26 +51,47 @@ class Transaction(Base):
     fee = Column(BigInteger)
 
     # relationships
-    block = relationship("Block", back_populates="Transaction")
-    # relationships
-    addresses = relationship("Transaction",
-                             secondary="TransactionIO",
-                             back_populates="transactions")
+    block = relationship("Block", back_populates="transactions")
+
+
+class TransactionInput(Base):
+    __tablename__ = "TransactionInput"
+
+    transaction_hash = Column(String,
+                              ForeignKey("Transaction.hash"),
+                              primary_key=True)
+    index = Column(BigInteger, primary_key=True)
+    spent_transaction_hash = Column(String)
+    spent_output_index = Column(BigInteger)
+    script_asm = Column(String)
+    script_hex = Column(String)
+    sequence = Column(BigInteger)
+    required_signatures = Column(BigInteger)
+    type = Column(String)
+    value = Column(BigInteger)
+
+
+class TransactionOutput(Base):
+    __tablename__ = "TransactionOutput"
+
+    transaction_hash = Column(String,
+                              ForeignKey("Transaction.hash"),
+                              primary_key=True)
+    index = Column(BigInteger, primary_key=True)
+    script_asm = Column(String)
+    script_hex = Column(String)
+    required_signatures = Column(BigInteger)
+    type = Column(String)
+    value = Column(BigInteger)
 
 
 class TransactionIO(Base):
     __tablename__ = "TransactionIO"
 
-    # fields
-    transaction_id = Column(String,
-                            ForeignKey("Transaction.hash"),
-                            primary_key=True)
-    input = Column(String,
-                   ForeignKey("Address.hash"),
-                   primary_key=True)
-    output = Column(String,
-                    ForeignKey("Address.hash"),
-                    primary_key=True)
+    id = Column(Integer, primary_key=True)
+    transaction_hash = Column(String, ForeignKey("Transaction.hash"))
+    input_address = Column(String)
+    output_address = Column(String)
 
 
 engine = create_engine(
