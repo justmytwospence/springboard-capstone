@@ -105,7 +105,7 @@ for line in sys.stdin:
             session.add(Transaction(**line_dict))
             session.commit()
 
-            input_addresses = process_outputs(transaction_inputs, line_dict['hash'])
+            input_addresses = process_inputs(transaction_inputs, line_dict['hash'])
             output_addresses = process_outputs(transaction_outputs, line_dict['hash'])
 
             # write address interactions to AddressInteractions table
