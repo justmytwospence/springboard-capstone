@@ -12,7 +12,6 @@ Base = declarative_base()
 class Block(Base):
     __tablename__ = "Block"
 
-    # fields
     number = Column(BigInteger, primary_key=True)
     hash = Column(String)
     size = Column(BigInteger)
@@ -26,14 +25,12 @@ class Block(Base):
     coinbase_param = Column(String)
     transaction_count = Column(BigInteger)
 
-    # relationships
     transactions = relationship("Transaction", back_populates="block")
 
 
 class Transaction(Base):
     __tablename__ = "Transaction"
 
-    # fields
     hash = Column(String, primary_key=True)
     block_number = Column(BigInteger, ForeignKey("Block.number"))
     size = Column(BigInteger)
@@ -50,17 +47,22 @@ class Transaction(Base):
     output_value = Column(BigInteger)
     fee = Column(BigInteger)
 
-    # relationships
     block = relationship("Block", back_populates="transactions")
 
 
-class TransactionInput(Base):
-    __tablename__ = "TransactionInput"
+class Address(Base):
+    __tablename__ = "Address"
 
-    transaction_hash = Column(String,
-                              ForeignKey("Transaction.hash"),
-                              primary_key=True)
-    index = Column(BigInteger, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    hash = Column(String)
+
+
+class Input(Base):
+    __tablename__ = "Input"
+
+    id = Column(Integer, primary_key=True)
+    transaction_hash = Column(String, ForeignKey("Transaction.hash"))
+    index = Column(BigInteger)
     spent_transaction_hash = Column(String)
     spent_output_index = Column(BigInteger)
     script_asm = Column(String)
@@ -70,23 +72,40 @@ class TransactionInput(Base):
     type = Column(String)
     value = Column(BigInteger)
 
+    addresses = relationship("Address", secondary="InputAddress")
 
-class TransactionOutput(Base):
-    __tablename__ = "TransactionOutput"
 
-    transaction_hash = Column(String,
-                              ForeignKey("Transaction.hash"),
-                              primary_key=True)
-    index = Column(BigInteger, primary_key=True)
+class InputAddress(Base):
+    __tablename__ = "InputAddress"
+
+    input_id = Column(Integer, ForeignKey("Input.id"), primary_key=True)
+    address_id = Column(Integer, ForeignKey("Address.id"), primary_key=True)
+
+
+class Output(Base):
+    __tablename__ = "Output"
+
+    id = Column(Integer, primary_key=True)
+    transaction_hash = Column(String, ForeignKey("Transaction.hash"))
+    index = Column(BigInteger)
     script_asm = Column(String)
     script_hex = Column(String)
     required_signatures = Column(BigInteger)
     type = Column(String)
     value = Column(BigInteger)
 
+    addresses = relationship("Address", secondary="OutputAddress")
 
-class TransactionIO(Base):
-    __tablename__ = "TransactionIO"
+
+class OutputAddress(Base):
+    __tablename__ = "OutputAddress"
+
+    output_id = Column(Integer, ForeignKey("Output.id"), primary_key=True)
+    address_id = Column(Integer, ForeignKey("Address.id"), primary_key=True)
+
+
+class AddressInteraction(Base):
+    __tablename__ = "AddressInteraction"
 
     id = Column(Integer, primary_key=True)
     transaction_hash = Column(String, ForeignKey("Transaction.hash"))
